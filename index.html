@@ -1,0 +1,364 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Archive - System 98</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Rubik+Broken+Fax&display=swap" rel="stylesheet">
+    
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: #000; color: #e5e5e5;
+            font-family: 'Inter', sans-serif; overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Ana Galeri Kapsayıcısı - Grid'e geçildi */
+        #gallery-container {
+            display: grid; 
+            width: 100%; 
+            height: 92vh; 
+            padding: 0; 
+            margin: 0;
+            gap: 0; /* Kesinlikle boşluk yok */
+            opacity: 0; 
+            transition: opacity 0.5s ease;
+            overflow: hidden;
+        }
+
+        .img-box {
+            position: relative; 
+            overflow: hidden;
+            box-sizing: border-box;
+            border: none; /* Kenarlıklar tamamen kaldırıldı */
+            margin: 0;
+            padding: 0;
+            cursor: pointer; 
+            background-color: #000;
+        }
+
+        /* Hover durumunda dışa değil içe doğru vurgu (layout bozmaması için) */
+        .img-box:hover {
+            z-index: 100; 
+            outline: 1px solid #00ffff;
+            box-shadow: inset 0 0 40px rgba(0, 255, 255, 0.5);
+        }
+
+        .video-indicator {
+            position: absolute; bottom: 8px; right: 8px;
+            background: rgba(0,0,0,0.8); padding: 5px;
+            border-radius: 50%; border: 1px solid #00ffff;
+            z-index: 10; pointer-events: none;
+        }
+
+        .video-indicator svg { width: 14px; height: 14px; fill: #00ffff; }
+
+        .img-box img, .img-box video {
+            width: 100%; height: 100%; 
+            object-fit: cover; /* Hücreyi tam doldurur */
+            display: block;
+            filter: url(#pixelate) invert(1) contrast(150%) brightness(120%) saturate(200%);
+            transition: filter 0.2s ease; will-change: filter; pointer-events: none;
+        }
+
+        .img-box:hover img, .img-box:hover video { filter: none; }
+
+        /* FOOTER MARQUEE - 500S HIZ */
+        #footer-marquee {
+            width: 100%; height: 8vh;
+            background-color: #000; border-top: 1px solid #00aaaa;
+            display: flex; align-items: center; overflow: hidden; z-index: 50;
+            position: relative;
+        }
+
+        .marquee-content {
+            display: inline-block; 
+            font-size: clamp(14px, 2.2vh, 20px);
+            color: #ff0000; 
+            white-space: nowrap;
+            will-change: transform;
+            animation: marquee-scroll 500s linear infinite;
+            text-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+            font-family: 'Courier New', Courier, monospace;
+            text-transform: lowercase;
+            letter-spacing: 1px;
+        }
+
+        @keyframes marquee-scroll {
+            0% { transform: translateX(100vw); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* MODAL WINDOWS 98 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
+            z-index: 1000; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .win98-window {
+            width: 90vw; max-width: 800px; background-color: #1a1a1a;
+            border: 2px solid #666; box-shadow: 8px 8px 0px #000;
+            display: flex; flex-direction: column;
+        }
+
+        .win98-title-bar {
+            background: linear-gradient(90deg, #008080, #004040);
+            padding: 4px 8px; display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .win98-title-text { color: #fff; font-weight: bold; font-size: 12px; }
+
+        .win98-close-btn {
+            width: 18px; height: 18px; background-color: #c0c0c0;
+            border: 1px solid #fff; border-right-color: #000; border-bottom-color: #000;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 10px; color: #000; font-weight: bold;
+        }
+
+        .win98-content { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+
+        .win98-media-container {
+            background: #000; border: 2px inset #444;
+            min-height: 300px; display: flex; justify-content: center; align-items: center;
+            position: relative; overflow: hidden;
+        }
+
+        .win98-media { max-width: 100%; max-height: 60vh; }
+        
+        .twitter-embed-container { width: 100%; height: 450px; background: #000; }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        .win98-desc {
+            font-family: "Rubik Broken Fax", serif; font-size: 14px;
+            color: #00ffff; line-height: 1.5; border: 1px solid #333; padding: 8px;
+        }
+
+        .win98-action-btn {
+            background-color: #333; color: #00ffff; border: 1px solid #555;
+            padding: 6px 12px; font-size: 11px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+        }
+        
+        .pixelate-svg { position: absolute; width: 0; height: 0; }
+    </style>
+</head>
+<body>
+
+    <svg class="pixelate-svg">
+        <filter id="pixelate" x="0" y="0">
+            <feFlood x="4" y="4" height="1" width="1"/>
+            <feComposite width="4" height="4"/>
+            <feTile result="a"/>
+            <feComposite in="SourceGraphic" in2="a" operator="in"/>
+            <feMorphology operator="dilate" radius="2"/>
+        </filter>
+    </svg>
+
+    <div id="gallery-container"></div>
+
+    <div id="footer-marquee">
+        <div class="marquee-content" id="marquee-text">
+            Zarathustras eye had perceived that a certain youth avoided him. And as he walked alone one evening over the hills surrounding the town called The Pied Cow, behold, there found he the youth sitting leaning against a tree, and gazing with wearied mind into the valley. Zarathustra thereupon laid hold of the tree beside which the youth sat, and spake thus: If I wanted to shake this tree with my hands, I should not be able to do it. But the wind, which we see not, troubleth and bendeth it as it listeth. We are sorest bent and troubled by invisible hands. Thereupon the youth arose disconcerted and said: I hear Zarathustra, and just now was I thinking of him! Zarathustra answered: Why art thou frightened on that account? But it is with man as it is with the tree. The more he seeketh to rise into the height and light, the more vigorously do his roots struggle earthward, downward, into the dark and deep into the evil. Yea, into the evil! cried the youth. How is it possible that thou hast discovered my soul? Zarathustra smiled, and said: Many a soul one will never discover, unless one first invent it. Yea, into the evil! cried the youth once more. Thou saidst the truth, Zarathustra. I trust myself no longer since I sought to rise into the height, and nobody trusteth me any longer; how doth that happen? I change too fast: my to-day refuteth my yesterday. I often skip the steps when I clamber; for that, no step pardoneth me. When I am at the top, I find myself always alone. No one speaketh unto me, the frost of solitude maketh me tremble. What do I seek on the height? My loathing and my longing grow together; the higher I climb, the more I despise him who climbeth. What doth he seek on the height? How ashamed I am of my climbing and stumbling! How I mock at my violent panting! How I hate him who flieth! How tired I am on the height! Here the youth was silent. And Zarathustra contemplated the tree beside which they stood, and spake thus: This tree standeth lonely here on the hills; it hath grown up high above man and beast. And if it wanted to speak, it would have no one who could understand it: so high hath it grown. Now it waiteth and waiteth, for what doth it wait? It dwelleth too close to the seat of the clouds; it waiteth perhaps for the first lightning? When Zarathustra had said this, the youth called out with violent gestures: Yea, Zarathustra, thou speakest the truth. My destruction I longed for, when I desired to be on the height, and thou art the lightning for which I waited! Lo! what have I been since thou hast appeared amongst us? It is my envy of thee that hath destroyed me! Thus spake the youth, and wept bitterly. But Zarathustra put his arm about him, and led him away with him. And when they had walked a while together, Zarathustra began to speak thus: It rendeth my heart. Better than thy words express it, thine eyes tell me all thy danger. As yet thou art not free; thou still seekest freedom. Too unsleeping hath thy seeking made thee, and too wakeful. On the open height wouldst thou be; for the stars thy soul thirsteth. But thy bad impulses also thirst for freedom. Thy wild dogs want liberty; they bark for joy in their cellar when thy spirit endeavoureth to open all prison doors. Still art thou a prisoner it seemeth to me who deviseth liberty for himself: ah! sharp becometh the soul of such prisoners, but also deceitful and wicked. To purify himself, is still necessary for the freedman of the spirit. Much of the prison and the mould still remaineth in him: pure hath his eye still to become. Yea, I know thy danger. But by my love and hope I conjure thee: cast not thy love and hope away!
+        </div>
+    </div>
+
+    <div id="win98-modal" class="modal-overlay">
+        <div class="win98-window">
+            <div class="win98-title-bar">
+                <div class="win98-title-text">MEDIA_PLAYER_98.EXE</div>
+                <div class="win98-close-btn" id="modal-close">X</div>
+            </div>
+            <div class="win98-content">
+                <div class="win98-media-container" id="media-stage"></div>
+                <div class="win98-desc" id="modal-desc"></div>
+                <div class="flex justify-end">
+                    <a href="#" target="_blank" id="modal-link" class="win98-action-btn">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+                        OPEN_SOURCE
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+        
+  { type: "image", url: "https://pbs.twimg.com/media/G_tDK2YXkAEcIgi?format=jpg&name=small", desc: "Next time you’re playing hide and seek with quantum information theory, remember to pull this bad boy out", link: "https://x.com/ProofofMaro/status/2016279115834196466?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_tmXleWQAA74Ui?format=jpg&name=small", desc: "The truth in a single image.", link: "https://x.com/TheProjectUnity/status/2016317851838132255?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_tuU4vXkAATpal?format=png&name=small", desc: "This is the first EVER real image of an electron's orbit ─ you're literally looking inside a hydrogen atom", link: "https://x.com/forallcurious/status/2016327140074258751?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_kkbxYW8AAQiW4?format=jpg&name=small", desc: "Where Music, Mathematics, Sacred Geometry, and Esoterica meet, to reach an understanding on Existence", link: "https://x.com/Dreamscapes42/status/2015682372067586456?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_YJrekXEAAI_DX?format=jpg&name=small", desc: "Psychologists suggests we do not 'THINK' thought, we 'RECIEVE' them", link: "https://x.com/WeltgeistYT/status/2015424203088929275?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G-1xsg7awAAybmD?format=jpg&name=900x900", desc: "Prophetic perfect tense", link: "https://x.com/Pat_Stedman/status/2012451600271397194?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G9ieE3NXEAEpUg5?format=jpg&name=small", desc: "Philosophy Meme", link: "https://x.com/philosophymeme0/status/2006527447043309810?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G9e_rgBXYAAovkv?format=jpg&name=small", desc: "Respectful Memes", link: "https://x.com/RespectfulMemes/status/2006402720186630165?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G85GXu3XkAAyulh?format=jpg&name=900x900", desc: "WHY DID THEY STOP MAKING GAMES LIKE THIS?", link: "https://x.com/St1ka/status/2003616260630970589?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G36SdhnWAAAbX6o?format=jpg&name=small", desc: "6000 Years of World History in 1 Picture", link: "https://x.com/JoshuaBarzon/status/1981182019255099763?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G3D1XeZXQAAiX4R?format=jpg&name=small", desc: "Tolerance For Uncertainty Is The Most Valuable Human Trait", link: "https://x.com/SahilBloom/status/1977350028004884739?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G1FtuH9XQAA0FOA?format=jpg&name=900x900", desc: "This is what they took from us btw. shame", link: "https://x.com/aleksliving/status/1968475155824255227?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/GzZo7p2WwAAf7AK?format=jpg&name=small", desc: "90s Pokemon Aesthetics", link: "https://x.com/90sPKMN/status/1960870065642897751?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/Gy3lykCWAAA1cTY?format=png&name=small", desc: "Design Concept", link: "https://x.com/drex_dsgn/status/1958474081524695487?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/GoBgda4W0AAoYGs?format=jpg&name=small", desc: "Hamptonism Art", link: "https://x.com/hamptonism/status/1909632304424636582?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/GkLYKj1WUAEuPTK?format=jpg&name=small", desc: "Fortnite aesthetics", link: "https://x.com/swagfortnite13/status/1892312474700894630?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/GkF19ssXQAEk0vx?format=jpg&name=small", desc: "Honey, 25x magnified.", link: "https://x.com/AlpacaAurelius/status/1891923055435243915?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_vfrSdWkAAUc1_?format=jpg&name=small", desc: "Occult Bot Imagery", link: "https://x.com/0ccultbot/status/2016451236946464863?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_uNR2CWMAAfcdi?format=jpg&name=small", desc: "Esoteric Symbolism", link: "https://x.com/0ccultbot/status/2016360639485124618?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_sBtoJbAAIAnUT?format=jpg&name=small", desc: "Philosophy of Physics", link: "https://x.com/PhilosophyOfPhy/status/2016207144530633048?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_r0xNLbAAYW7Rk?format=png&name=small", desc: "Computational Philosophy", link: "https://x.com/compusophy/status/2016192918894309641?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_hzHBibYAAn4_X?format=png&name=small", desc: "Here you see the first Quantum Entanglement image EVER captured worldwide.", link: "https://x.com/forallcurious/status/2015488058813293035?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_b9wjpX0AAf60-?format=jpg&name=small", desc: "Hamptonism Abstract", link: "https://x.com/hamptonism/status/2015076900885135600?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_to5N_WQAAqLv4?format=jpg&name=small", desc: "Philosophy Meme Variation", link: "https://x.com/philosophymeme0/status/2016320596309619103?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_w_GhwbUAAjfS3?format=jpg&name=900x900", desc: "New quantum research reveals time doesn't move forward but folds onto itself meaning your present actions might already be reshaping your past.", link: "https://x.com/amazing_physics/status/2016556122677887300?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_pDTpEbAAEW6ky?format=jpg&name=small", desc: "Calm Deion Vibes", link: "https://x.com/CalmDeion/status/2015997795120120260?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_tYiPpbAAIvu1k?format=jpg&name=900x900", desc: "Jovana Aesthetic", link: "https://x.com/whotfisjovana/status/2016302608009592980?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_p0l2PX0AAzg-N?format=jpg&name=900x900", desc: "Original sketch of the Radium atom by Niels Bohr (1922).", link: "https://x.com/mathladyhazel/status/2016051980729209150?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HBusfgYWsAAmIQj?format=jpg&name=900x900", desc: "PlatoGPT", link: "https://x.com/philosophymeme0/status/2025402121688920099?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HBtFuV6WUAAV4p9?format=jpg&name=900x900", desc: "Spiritualbeing having a human experience", link: "https://x.com/The4thWayYT/status/2025289125998293351?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HBfR67iWEAA1S40?format=jpg&name=medium", desc: "Conscious water.", link: "https://x.com/TheOfficial1984/status/2024317369737179468?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HBekrg5bIAA_t1M?format=jpg&name=900x900", desc: "QT", link: "https://x.com/skglearning/status/2024267631805813124?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HBeCAjnXYAAHU6G?format=jpg&name=900x900", desc: "OOOPSS", link: "https://x.com/The4thWayYT/status/2024229520136376406?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HBetXppbUAINbc8?format=jpg&name=900x900", desc: "META QUEST 13", link: "https://x.com/Holy_Caligula/status/2024277183305593310?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HBeW3CwXQAATIZh?format=jpg&name=small", desc: "I real eyesd", link: "https://x.com/raisinchoirgirl/status/2024252454712295596?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HBdGT_wW4AA9l8l?format=png&name=small", desc: "🚨 Harvard scientist (Dr. Willie Soon) claims that the mathematical precision of antimatter proves the Universe was designed by God.", link: "https://x.com/MAstronomers/status/2024164313783484527?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HBXk2WwWMAAs9aP?format=jpg&name=900x900", desc: "In January 2026, CERN's AI flagged a collision signature that changed depending on who was in the room...", link: "https://x.com/Ryansikorski10/status/2023936309429981283?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HBWewE1a8AAyyeI?format=jpg&name=900x900", desc: "Play the Game", link: "https://x.com/maximumpain333/status/2023698164067516679?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HBTlKv1bcAMw3Fi?format=jpg&name=900x900", desc: "Beyond all polarities I am", link: "https://x.com/miboso/status/2023494130832470081?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G-9f-_dXoAAW6Cr?format=jpg&name=small", desc: "If you feel like getting rich is taking too long, read this. your mind is your worst enemy.", link: "https://x.com/termsheetinator/status/2012934732703732141" },
+  { type: "image", url: "https://pbs.twimg.com/media/HBNtDTpW4AECqZc?format=jpg&name=900x900", desc: "🚨: Gravity may be key evidence that our Universe is a simulation", link: "https://x.com/MAstronomers/status/2023080572076134440?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HBJ5yXnaAAASbQp?format=jpg&name=900x900", desc: "cute", link: "https://x.com/Philip_Goff/status/2022813141302694336?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HA-hikJXEAAZ2BE?format=jpg&name=900x900", desc: "Pyramids? You mean impedance-matching transformers?", link: "https://x.com/Andercot/status/2022012651996688523?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HA9_31-WQAAJJE_?format=jpg&name=small", desc: "Do you know what this means? 1", link: "https://x.com/isjuustadream/status/2021975420359389557?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HA9_42dbAAAbBLx?format=jpg&name=small", desc: "Do you know what this means? 2", link: "https://x.com/isjuustadream/status/2021975420359389557?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HA6XdFnaAAAG9oQ?format=jpg&name=small", desc: "Did you know that there were some folks back in 1908...", link: "https://x.com/DamonRiddle3/status/2021719812255154392?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HA3wv4dbYAA7Gtv?format=jpg&name=900x900", desc: "Nikola Tesla claimed to love a specific white pigeon...", link: "https://x.com/PhysInHistory/status/2021536538593767902?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HA58_0EaIAAq_So?format=png&name=900x900", desc: "...", link: "https://x.com/0ccultbot/status/2021690764317618466?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HAzPI0GWcAEnh5k?format=png&name=small", desc: "Time may be marching forward in three dimensions.", link: "https://x.com/Rainmaker1973/status/2021814019409973543?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HA3yRnvbEAAOjTM?format=jpg&name=900x900", desc: "\"The universe exists solely of waves of motion.\"", link: "https://x.com/sanjabh/status/2021538203023601927?s=20" },
+  { type: "video", url: "https://x.com/i/status/2021317086572839399", desc: "Elon Musk on how he moves so fast", link: "https://x.com/a16z/status/2021317086572839399?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HAwOCZFakAAhmBD?format=jpg&name=small", desc: "Sound and music are geometric.", link: "https://x.com/ClassicalAegis/status/2021005776253485231?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HAvcpTobIAAb0J3?format=jpg&name=900x900", desc: "Marked Safe from Consensus Reality", link: "https://x.com/inflammateomnia/status/2020951461979619404?s=20" },
+  { type: "video", url: "https://x.com/i/status/2021221472065265977", desc: "NASA black holes size comparison video", link: "https://x.com/konstructivizm/status/2021221472065265977?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HApisF-asAAYIaD?format=jpg&name=900x900", desc: "\"What we observe is not nature itself...\" - Werner Heisenberg", link: "https://x.com/PhilosophyOfPhy/status/2020535897226084372?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HAut87gbAAA4Ofd?format=jpg&name=900x900", desc: "higher dimensional perspective shape", link: "https://x.com/taijitu_sees/status/2020900122226512208?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HAu85ssbkAADRce?format=jpg&name=large", desc: "Do you know your human design?", link: "https://x.com/ProofofMaro/status/2020916564422271290?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HAiPgfsXgAAXxrh?format=jpg&name=small", desc: "The dumbest person you know is reposting this", link: "https://x.com/MummifiedAlive/status/2020264319079129481?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HAnVaj1aQAAopGU?format=jpg&name=900x900", desc: "Multidimensionality and fractal time theory", link: "https://x.com/CankayKoryak/status/2020380568232382681?s=20" },
+  { type: "video", url: "https://x.com/i/status/2019247525447029025", desc: "Noble Prize winning timelapse of stars orbiting black hole", link: "https://x.com/AstronomyVibes/status/2019247525447029025?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HAM7lKqbwAAsE5l?format=jpg&name=900x900", desc: "The Schwarzschild Metric explanation", link: "https://x.com/PhilosophyOfPhy/status/2018522571873079546?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HANfCwzbQAAtFN_?format=jpg&name=900x900", desc: "merkaba", link: "https://x.com/conciouscreator/status/2018561561749750239?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HAEwuNzWoAA5UiH?format=jpg&name=small", desc: "tenet", link: "https://pbs.twimg.com/media/HAEwuNzWoAA5UiH?format=jpg&name=small" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_MkS-4XAAE5D9r?format=jpg&name=900x900", desc: "Christopher Nolan’s tesseract sketches", link: "https://x.com/NolanAnalyst/status/2017904004752175317?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HAJFGgmXMAA5Cs3?format=png&name=small", desc: "Kurt Gödel's rotating universe theory", link: "https://x.com/Rainmaker1973/status/2018251566499668075?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/HAG6dtqXMAAXSrc?format=jpg&name=900x900", desc: "music theory and sound design shapes", link: "https://x.com/contrabased_tim/status/2018100498453119174?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_7-Wa8XoAAJJrD?format=jpg&name=medium", desc: "fighting depression with music vibes", link: "https://x.com/cartisburner__/status/2017329349507117229?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_5xUmkXkAEIB2M?format=jpg&name=900x900", desc: "Shift to your fearless version", link: "https://x.com/ragecvlt/status/2017174289129103752?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_5mAEIaoAAAGuP?format=jpg&name=900x900", desc: "How to master physics in 6 months", link: "https://x.com/Kekius_Sage/status/2017163032208855348?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_1ibK7bUAUTYKz?format=jpg&name=900x900", desc: "Teletubbies with Sopranos subtitles accident", link: "https://x.com/orange_peelbeef/status/2016876438549418369?s=20" },
+  { type: "video", url: "https://x.com/i/status/2016863287149818242", desc: "Prof. Brian Greene explains string theory", link: "https://x.com/Rainmaker1973/status/2016863287149818242?s=20" },
+  { type: "video", url: "https://x.com/i/status/2016958728776429818", desc: "Schrödinger-Poisson system in action", link: "https://x.com/mathelirium/status/2016958728776429818?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_0nTSJbUAIujHR?format=jpg&name=900x900", desc: "observe your mind", link: "https://x.com/Zenm001/status/2016811483343016397?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_3rCkobQAAV4TM?format=jpg&name=900x900", desc: "Simulation universe theory", link: "https://x.com/NightSkyNow/status/2017026651713130986?s=20" },
+  { type: "image", url: "https://pbs.twimg.com/media/G_2KNy4aUAAWzr5?format=jpg&name=small", desc: "Quantum Physics for Babies", link: "https://x.com/PhilosophyOfPhy/status/2016920181218693537?s=20" }
+];
+
+        const container = document.getElementById('gallery-container');
+        const modal = document.getElementById('win98-modal');
+        const mediaStage = document.getElementById('media-stage');
+        const modalDesc = document.getElementById('modal-desc');
+        const modalLink = document.getElementById('modal-link');
+        const closeBtn = document.getElementById('modal-close');
+
+        function openModal(item) {
+            mediaStage.innerHTML = '';
+            if (item.type === "video" && item.url.includes('x.com')) {
+                const tweetId = item.url.split('/').pop().split('?')[0];
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://platform.twitter.com/embed/Tweet.html?id=${tweetId}&theme=dark`;
+                iframe.className = "twitter-embed-container";
+                mediaStage.appendChild(iframe);
+            } else if (item.type === "video") {
+                const video = document.createElement('video');
+                video.src = item.url; video.controls = true; video.autoplay = true;
+                video.className = "win98-media";
+                mediaStage.appendChild(video);
+            } else {
+                const img = document.createElement('img');
+                img.src = item.url; img.className = "win98-media";
+                mediaStage.appendChild(img);
+            }
+            modalDesc.innerText = item.desc || "No archive data found.";
+            modalLink.href = item.link;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+            mediaStage.innerHTML = ''; 
+        }
+
+        closeBtn.onclick = closeModal;
+        modal.onclick = (e) => e.target === modal && closeModal();
+
+        // Render Gallery
+        rawData.forEach(item => {
+            const box = document.createElement('div');
+            box.className = 'img-box';
+
+            const media = document.createElement('img');
+            if(item.type === "video") {
+                media.src = "https://pbs.twimg.com/profile_images/1683899100922511378/5lYUI2D6_400x400.jpg";
+                const ind = document.createElement('div');
+                ind.className = 'video-indicator';
+                ind.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+                box.appendChild(ind);
+            } else {
+                media.src = item.url;
+            }
+
+            box.onclick = () => openModal(item);
+            box.appendChild(media);
+            container.appendChild(box);
+        });
+
+        // TAM SIĞDIRMA ALGORİTMASI (GRID İLE SIFIR BOŞLUK)
+        function calculateLayout() {
+            const boxes = document.querySelectorAll('.img-box');
+            if (boxes.length === 0) return;
+
+            const containerW = container.clientWidth;
+            const containerH = container.clientHeight; 
+            const count = boxes.length;
+
+            // En boy oranına göre en verimli sütun/satır sayısını hesapla
+            let cols = Math.ceil(Math.sqrt(count * (containerW / containerH)));
+            let rows = Math.ceil(count / cols);
+
+            // Grid CSS ayarlarını güncelle
+            container.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            container.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+            container.style.opacity = 1;
+        }
+
+        window.onresize = calculateLayout;
+        window.onload = calculateLayout;
+        
+        // Dinamik içerik ve ekran değişimleri için periyodik kontrol
+        let checks = 0;
+        const initInterval = setInterval(() => {
+            calculateLayout();
+            if (++checks > 5) clearInterval(initInterval);
+        }, 400);
+
+    </script>
+</body>
+</html>
